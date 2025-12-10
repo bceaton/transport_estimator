@@ -1,0 +1,91 @@
+---
+title: "Sediment transport estimator tool"
+author: "Brett Eaton"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+source(here("transport_functions_from_bedload_package.R"))
+```
+
+# Project information
+
+Add a description of the project and purpose.
+
+# Reach parameters
+
+Enter the parameters for the reach to be assessed.
+
+```{r}
+D50 <- 0.045 #enter the characteristic grain size for the sediment being transported
+
+D_r <- 0.1  #enter the grain size that determines flow resistance, 
+            #usually the 84th percentile of the bed surface
+
+slope <- 0.01  #enter the reach average gradient for the stream in question (m/m)
+
+Q <- 100  #enter the peak discharge to be assessed (m3/s)
+
+Dur <- 6  #enter duration for the flow Q (hours)
+```
+
+# Cross section 
+
+Either load a cross section or approximate one from trapezoid dimensions
+
+```{r}
+river_section <- make_trapezoid(w_top = 20,  #top width of channel
+                                w_bot = 9,  #bottom width of the channel
+                                H_bank = 2,  #trapezoid depth
+                                Z_fp = 1400) #elevation asl (m) of bank top
+plot(river_section, asp = 2)
+```
+
+# Create a sediment rating curve
+
+Use a sediment transport function to estimate a sediment rating curve for all flows that would be contained within the cross section.
+
+```{r}
+
+#select the transport equation
+ tr_eq <- "ec"  #select to use Eaton and Church, 2011
+# tr_eq <- "mpm"  #select to use Meyer Peter and Muller, 1948
+# tr_eq <- "eb"  #select to use Einstein Brown, 1950
+# tr_eq <- "wp"  #select to use Wong Parker, 2004
+# tr_eq <- "vr"  #select to use Van Rijn 1984
+# tr_eq <- "yln" #select to use Yalin 1963
+
+rating_df <- estimate_hydraulics(river_section,
+                                 slope,
+                                 D50,
+                                 D_r,
+                                 fun = tr_eq)
+
+plot(rating_df$flow, rating_df$transport, 
+     #log = "xy",
+     type = "l",
+     xlab = "flow (cms)",
+     ylab = "transport capacity (cms)")
+
+```
+
+# Estimate the sediment transport volume
+
+We can approximate the transport volume for the discharge and duration specified above
+
+```{r}
+# constant to scale hours to seconds
+hr2s <- 60 * 60
+
+# calculate the transport volume
+vol <- approx(x = rating_df$flow,
+              y = rating_df$transport,
+              xout = Q)[[2]] * Dur * hr2s
+
+print(vol)
+
+```
