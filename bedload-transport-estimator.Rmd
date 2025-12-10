@@ -21,16 +21,16 @@ Add a description of the project and purpose.
 Enter the parameters for the reach to be assessed.
 
 ```{r}
-D50 <- 0.045 #enter the characteristic grain size for the sediment being transported
+D50 <- 0.01 #enter the characteristic grain size for the sediment being transported
 
 D_r <- 0.1  #enter the grain size that determines flow resistance, 
             #usually the 84th percentile of the bed surface
 
-slope <- 0.01  #enter the reach average gradient for the stream in question (m/m)
+slope <- 0.005  #enter the reach average gradient for the stream in question (m/m)
 
-Q <- 100  #enter the peak discharge to be assessed (m3/s)
+Q <- c(10,20,50, 100)  #enter the peak discharge to be assessed (m3/s)
 
-Dur <- 6  #enter duration for the flow Q (hours)
+Dur <- 24  #enter duration for the flow Q (hours)
 ```
 
 # Cross section 
@@ -85,7 +85,7 @@ hr2s <- 60 * 60
 vol <- approx(x = rating_df$flow,
               y = rating_df$transport,
               xout = Q)[[2]] * Dur * hr2s
-
-print(vol)
+results <- data.frame(Q, transport_capacity = vol)
+print(results)
 
 ```
